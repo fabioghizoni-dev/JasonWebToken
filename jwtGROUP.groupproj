@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{F6A3A3B2-EE6D-4D3D-BC0C-526440F2B811}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="VCL\dProj\jwtVCL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Console\dProj\jwtConsole.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="jwtVCL">
+        <MSBuild Projects="VCL\dProj\jwtVCL.dproj"/>
+    </Target>
+    <Target Name="jwtVCL:Clean">
+        <MSBuild Projects="VCL\dProj\jwtVCL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="jwtVCL:Make">
+        <MSBuild Projects="VCL\dProj\jwtVCL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="jwtConsole">
+        <MSBuild Projects="Console\dProj\jwtConsole.dproj"/>
+    </Target>
+    <Target Name="jwtConsole:Clean">
+        <MSBuild Projects="Console\dProj\jwtConsole.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="jwtConsole:Make">
+        <MSBuild Projects="Console\dProj\jwtConsole.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="jwtVCL;jwtConsole"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="jwtVCL:Clean;jwtConsole:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="jwtVCL:Make;jwtConsole:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
