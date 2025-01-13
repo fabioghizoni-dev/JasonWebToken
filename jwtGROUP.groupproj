@@ -6,9 +6,6 @@
         <Projects Include="VCL\dProj\jwtVCL.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Console\dProj\jwtConsole.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -26,23 +23,14 @@
     <Target Name="jwtVCL:Make">
         <MSBuild Projects="VCL\dProj\jwtVCL.dproj" Targets="Make"/>
     </Target>
-    <Target Name="jwtConsole">
-        <MSBuild Projects="Console\dProj\jwtConsole.dproj"/>
-    </Target>
-    <Target Name="jwtConsole:Clean">
-        <MSBuild Projects="Console\dProj\jwtConsole.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="jwtConsole:Make">
-        <MSBuild Projects="Console\dProj\jwtConsole.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="jwtVCL;jwtConsole"/>
+        <CallTarget Targets="jwtVCL"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="jwtVCL:Clean;jwtConsole:Clean"/>
+        <CallTarget Targets="jwtVCL:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="jwtVCL:Make;jwtConsole:Make"/>
+        <CallTarget Targets="jwtVCL:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -10,6 +10,9 @@ object frmMain: TfrmMain
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Position = poScreenCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 15
   object pnlMain: TPanel
     Left = 0
@@ -20,14 +23,22 @@ object frmMain: TfrmMain
     Color = clWhite
     ParentBackground = False
     TabOrder = 0
-    object btnInit: TButton
-      Left = 880
-      Top = 528
-      Width = 115
-      Height = 41
-      Caption = 'Iniciar Console'
-      TabOrder = 0
-      OnClick = btnInitClick
+    object lblID: TLabel
+      AlignWithMargins = True
+      Left = 0
+      Top = 559
+      Width = 36
+      Height = 21
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alCustom
+      Alignment = taCenter
+      Anchors = [akLeft, akTop, akBottom]
+      AutoSize = False
+      Caption = '111111'
+      Layout = tlCenter
     end
     object pnlPort: TPanel
       AlignWithMargins = True
@@ -43,18 +54,18 @@ object frmMain: TfrmMain
       BevelOuter = bvNone
       Color = clWhite
       ParentBackground = False
-      TabOrder = 1
+      TabOrder = 0
       object lblPort: TLabel
         Left = 0
         Top = 0
-        Width = 139
+        Width = 137
         Height = 24
         Margins.Left = 0
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
         Align = alLeft
-        Caption = 'Porta do Servidor:'
+        Caption = 'Porta do servidor:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -66,7 +77,7 @@ object frmMain: TfrmMain
       end
       object lblEndPoint: TLabel
         AlignWithMargins = True
-        Left = 203
+        Left = 201
         Top = 0
         Width = 74
         Height = 24
@@ -75,7 +86,7 @@ object frmMain: TfrmMain
         Margins.Right = 0
         Margins.Bottom = 0
         Align = alLeft
-        Caption = 'EndPoint:'
+        Caption = 'Endpoint:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -87,16 +98,37 @@ object frmMain: TfrmMain
       end
       object lblUserID: TLabel
         AlignWithMargins = True
-        Left = 406
+        Left = 404
         Top = 0
-        Width = 168
+        Width = 84
         Height = 24
         Margins.Left = 129
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
         Align = alLeft
-        Caption = 'Usu'#225'rio Autenticador:'
+        Caption = 'ID Usu'#225'rio:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -16
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Layout = tlCenter
+        ExplicitHeight = 21
+      end
+      object lblSixID: TLabel
+        AlignWithMargins = True
+        Left = 643
+        Top = 0
+        Width = 137
+        Height = 24
+        Margins.Left = 155
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alLeft
+        Caption = 'ID de Seis D'#237'gitos:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -116,12 +148,12 @@ object frmMain: TfrmMain
       Margins.Left = 40
       Margins.Top = 0
       Margins.Right = 40
-      Margins.Bottom = 40
+      Margins.Bottom = 0
       Align = alTop
       BevelOuter = bvNone
       Color = clWhite
       ParentBackground = False
-      TabOrder = 2
+      TabOrder = 1
       object edtServer: TEdit
         Left = 0
         Top = 0
@@ -165,6 +197,175 @@ object frmMain: TfrmMain
         TabOrder = 2
         ExplicitHeight = 23
       end
+      object edtSixID: TEdit
+        AlignWithMargins = True
+        Left = 643
+        Top = 0
+        Width = 187
+        Height = 26
+        Margins.Left = 50
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alLeft
+        MaxLength = 6
+        TabOrder = 3
+        ExplicitHeight = 23
+      end
+    end
+    object pnlInvisible: TPanel
+      Left = 1
+      Top = 91
+      Width = 1007
+      Height = 14
+      Align = alTop
+      BevelOuter = bvNone
+      Color = clWhite
+      ParentBackground = False
+      TabOrder = 2
+      object lblStandardPort: TLabel
+        AlignWithMargins = True
+        Left = 40
+        Top = 0
+        Width = 105
+        Height = 14
+        Margins.Left = 40
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alLeft
+        AutoSize = False
+        Caption = 'Padr'#227'o: '
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Layout = tlCenter
+      end
+      object lblStandardEndPoint: TLabel
+        AlignWithMargins = True
+        Left = 243
+        Top = 0
+        Width = 105
+        Height = 14
+        Margins.Left = 98
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alLeft
+        AutoSize = False
+        Caption = 'Padr'#227'o: '
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Layout = tlCenter
+        ExplicitLeft = 241
+      end
+      object lblStandardSixIDtxt: TLabel
+        AlignWithMargins = True
+        Left = 683
+        Top = 0
+        Width = 105
+        Height = 14
+        Margins.Left = 132
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alLeft
+        AutoSize = False
+        Caption = 'Padr'#227'o: '
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Layout = tlCenter
+        ExplicitLeft = 837
+      end
+      object lblStandardUserID: TLabel
+        AlignWithMargins = True
+        Left = 446
+        Top = 0
+        Width = 105
+        Height = 14
+        Margins.Left = 98
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alLeft
+        AutoSize = False
+        Caption = 'Padr'#227'o: '
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsItalic]
+        ParentFont = False
+        Layout = tlCenter
+        ExplicitLeft = 538
+      end
+    end
+    object pnlBtn: TPanel
+      AlignWithMargins = True
+      Left = 851
+      Top = 512
+      Width = 149
+      Height = 59
+      Margins.Left = 850
+      Margins.Top = 0
+      Margins.Right = 8
+      Margins.Bottom = 8
+      Align = alBottom
+      BevelOuter = bvNone
+      Caption = 'pnlBtn'
+      Color = clWhite
+      ParentBackground = False
+      TabOrder = 3
+      object lblRunning: TLabel
+        Left = 0
+        Top = 0
+        Width = 149
+        Height = 15
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alTop
+        ExplicitWidth = 3
+      end
+      object btnInit: TButton
+        Left = 0
+        Top = 15
+        Width = 149
+        Height = 44
+        Align = alClient
+        Caption = 'Iniciar Console'
+        TabOrder = 0
+        OnClick = btnInitClick
+      end
+    end
+    object check: TCheckBox
+      AlignWithMargins = True
+      Left = 852
+      Top = 495
+      Width = 66
+      Height = 17
+      Margins.Left = 851
+      Margins.Top = 0
+      Margins.Right = 90
+      Margins.Bottom = 0
+      Align = alBottom
+      Caption = 'Padr'#227'o'
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+      OnClick = checkClick
     end
   end
 end
