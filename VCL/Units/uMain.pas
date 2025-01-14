@@ -6,8 +6,11 @@ uses
   Horse,
   Horse.Jhonson,
   Horse.BasicAuthentication,
-  JOSE.Core.Builder,
   JOSE.Core.JWT,
+  JOSE.Core.JWA,
+  JOSE.Core.JWK,
+  JOSE.Core.Builder,
+  JOSE.Core.Parts,
   Winapi.Windows,
   Winapi.Messages,
   System.SysUtils,
@@ -23,32 +26,38 @@ uses
 type
   TfrmMain = class(TForm)
     pnlMain: TPanel;
-    btnInit: TButton;
-    pnlPort: TPanel;
+    pnlLeft: TPanel;
+    pnlEndPoint: TPanel;
+    pnlEdtPort: TPanel;
+    pnlLblPort: TPanel;
     lblPort: TLabel;
-    pnlEdts: TPanel;
-    edtServer: TEdit;
-    edtEndPoint: TEdit;
     lblEndPoint: TLabel;
-    edtUserID: TEdit;
-    lblUserID: TLabel;
-    edtSixID: TEdit;
-    lblSixID: TLabel;
-    pnlInvisible: TPanel;
-    lblStandardPort: TLabel;
-    lblStandardEndPoint: TLabel;
-    lblStandardSixIDtxt: TLabel;
-    lblStandardUserID: TLabel;
-    lblRunning: TLabel;
-    pnlBtn: TPanel;
+    pnlEdtEndPoint: TPanel;
+    pnlCheckBox: TPanel;
+    pnlLblStandard: TPanel;
+    lblStandard: TLabel;
     check: TCheckBox;
-    lblID: TLabel;
-    procedure btnInitClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    pnlQuite: TPanel;
+    pnlLblUser: TPanel;
+    lblUser: TLabel;
+    pnlEdtUser: TPanel;
+    edtUser: TEdit;
+    pnlLblPassWord: TPanel;
+    pnlEdtPassWord: TPanel;
+    lblPassWord: TLabel;
+    edtPassWord: TEdit;
+    pnlBtnConfirm: TPanel;
+    btnConfirm: TButton;
+    lblPortStandard: TLabel;
+    lblEnPointStandard: TLabel;
+    mmoJSON: TMemo;
+    pnlMMO: TPanel;
     procedure checkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure btnConfirmClick(Sender: TObject);
   private
-    procedure MakeJWT(EndPoint: String; Port, UserID, SixID: Integer);
+    function MakeJWT(User, PassWord, Issuer, Subject: string): string;
+    function ValidJWT(JWT: TJWT; Token, Key: String): Boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -69,145 +78,127 @@ uses System.JSON;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
-  LBody:
-  TJSONObject;
-  Json:
-  TJSONObject;
-  JsonStr,
-  nServer_User,
-  nServer_Pass:
-  String;
+  ID: Integer;
+  LBody: TJSONObject;
+  LToken,
+  Server_User,
+  Server_Pass: String;
 begin
+  try
 
-  nServer_User := 'Fabio Ghizoni';
-  nServer_Pass := '40028922';
+    THorse.Use(Jhonson);
+    lblPortStandard.Caption := '8080';
+    lblEnPointStandard.Caption := '/Private';
 
-  THorse.Use(HorseBasicAuthentication(function(const AUsername, APassword:
-  String): Boolean
-  begin
-    Result := AUsername.Equals(nServer_User) and APassword.Equals(nServer_Pass);
-  end));
+    mmoJSON.Clear;
+    checkClick(Sender);
+    Server_User := 'Fabio Ghizoni';
+    Server_Pass := '12345678';
+    ID := 40028922;
 
-  THorse.Get('/Private/FirstAuth', procedure(Req: THorseRequest; Res: THorseResponse)
-  begin
+    THorse.Use(HorseBasicAuthentication(function(const AUsername, APassword: String): Boolean
+    begin
+      Result := AUsername.Equals(Server_User) and APassword.Equals(Server_Pass);
+    end));
 
-//    Json := TJSONObject.Create;
-//    Json := TJSONObject.Create(TJSONPair.Create('nome', nServer_User));
-//    Json.AddPair('pass: ', nServer_Pass);
-
-    LBody := Req.Body<TJSONObject>;
-    Res.Send<TJSONObject>(LBody);
-
-//    JsonStr := Json.ToJSON;
-//    Res.Send(JsonStr);
-
-  end);
-
-  THorse.Use(Jhonson);
-
-  THorse.Post('/Private/Auth', procedure(Req: THorseRequest; Res: THorseResponse)
-  begin
-    Res.Send(JsonStr);
-  end);
-
-  THorse.Listen(8080);
-
-  if check.Checked = True then
-  begin
-    edtServer.Text := '8080';
-    edtEndPoint.Text := '/auth';
-    edtUserID.Text := '1';
-    edtSixID.Text := '111111';
-    lblStandardPort.Caption := 'Padrão: 8080';
-    lblStandardEndPoint.Caption := 'Padrão: /auth';
-    lblStandardUserID.Caption := 'Padrão: 1';
-    lblStandardSixIDtxt.Caption := 'Padrão: 111111';
-  end
-  else
-  begin
-    edtServer.Text := EmptyStr;
-    edtEndPoint.Text := EmptyStr;
-    edtUserID.Text := EmptyStr;
-    edtSixID.Text := EmptyStr;
-    lblStandardPort.Caption := 'Padrão: ';
-    lblStandardEndPoint.Caption := 'Padrão: ';
-    lblStandardUserID.Caption := 'Padrão: ';
-    lblStandardSixIDtxt.Caption := 'Padrão: ';
-  end;
-
-end;
-
-procedure TfrmMain.btnInitClick(Sender: TObject);
-var
-  EndPoint,
-  Port,
-  UserID,
-  SixID:
-  TCaption;
-begin
-
-  EndPoint := edtEndPoint.Text;
-  Port := edtServer.Text;
-  UserID := edtUserID.Text;
-  SixID := edtSixID.Text;
-
-  MakeJWT(EndPoint, StrToInt(Port), StrToInt(UserID), StrToInt(SixID));
-
-end;
-
-procedure TfrmMain.MakeJWT(EndPoint: string; Port, UserID, SixID: Integer);
-begin
-
-  if IntToStr(SixID) = lblID.Caption then
-  begin
-  THorse.Post(EndPoint,
-    procedure(Req: THorseRequest; Res: THorseResponse)
-    var
-      LToken: TJWT;
-      LText: String;
-      LCompactToken: TJSONObject;
+    THorse.Get('/Private/FirstAuth', procedure(Req: THorseRequest; Res: THorseResponse)
     begin
 
       try
 
-        LToken := TJWT.Create;
+        LBody := TJSONObject.Create;
+        LBody.AddPair('User', Server_User);
+        LBody.AddPair('ID', TJSONNumber.Create(ID));
 
-        LToken.Claims.SetClaimOfType<Integer>('user id: ', UserID);
-        LToken.Claims.SetClaimOfType<Integer>('id seis dígitos: ', SixID);
-        LToken.Claims.Issuer := 'SOS Soluções';
-        LToken.Claims.Subject := 'Fabio Ghizoni';
-        LToken.Claims.SetClaimOfType<String>('data e hora: ', DateTimeToStr(Now));
-        LToken.Claims.Expiration := Now + 1;
+        Res.ContentType('application/json');
+        Res.AddHeader('Hello', 'World');
+        Res.Send(LBody.ToJSON);
 
-        LCompactToken := TJSONObject.Create(TJSONPair.Create('key' , TJOSE.SHA256CompactToken('KEY', LToken)));
-        LText := LCompactToken.ToJSON;
-        Res.Send(LText);
-
-      finally
-
-        FreeAndNil(LToken);
-
-      end;
-
-    end);
-
-    try
-
-      //THorse.Listen(Port);
-
-      if THorse.IsRunning then
-        lblRunning.Caption := 'Está rodando...';
+        THorse.Get('/Private/AuthToken', procedure(Req: THorseRequest; Res: THorseResponse)
+        begin
+          Res.Send(MakeJWT(Server_User, Server_Pass, 'SOS Soluções', 'Fabio Ghizoni'));
+        end);
 
       except
-
-      on E: Exception do
-      begin
-        ShowMessage('  Erro: ' + E.ClassName + E.Message);
-          THorse.StopListen;
-      end;
+        on E: Exception do
+          ShowMessage(E.Message);
 
       end;
+    end);
+
+    THorse.Listen(8080);
+
+  finally
+    FreeAndNil(LBody);
   end;
+end;
+
+procedure TfrmMain.btnConfirmClick(Sender: TObject);
+var
+  User,
+  PassWord:
+  String;
+
+begin
+
+  if not (Trim(edtUser.Text) = EmptyStr) then
+  begin
+    User := edtUser.Text;
+  end
+  else
+    Exit;
+
+  if not (Trim(edtPassWord.Text) = EmptyStr) then
+  begin
+    PassWord := edtPassWord.Text;
+  end
+  else
+    Exit;
+
+  //MakeJWT(User, PassWord);
+
+end;
+
+function TfrmMain.ValidJWT(JWT: TJWT; Token, Key: String): Boolean;
+begin
+
+  Result := False;
+
+end;
+
+function TfrmMain.MakeJWT(User, PassWord, Issuer, Subject: string): string;
+var
+  LToken: TJWT;
+  LCompactToken: String;
+begin
+
+  if (User = 'Fabio Ghizoni') and (PassWord = '40028922') then
+  begin
+    try
+
+      if mmoJSON.Lines.Count > 0 then
+        mmoJSON.Clear;
+
+      if (Trim(Issuer) = EmptyStr) and (Trim(Subject) = EmptyStr) then
+      begin
+        LToken := TJWT.Create;
+        LToken.Claims.Issuer := Issuer;
+        LToken.Claims.Subject := Subject;
+        LToken.Claims.Expiration := Now + 1;
+
+        LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);
+        mmoJSON.Lines.Add(LCompactToken);
+      end;
+
+      Result := LCompactToken;
+
+    finally
+
+      FreeAndNil(LToken);
+
+    end;
+  end;
+
 end;
 
 procedure TfrmMain.checkClick(Sender: TObject);
@@ -215,34 +206,14 @@ begin
 
   if check.Checked = True then
   begin
-    edtServer.Text := '8080';
-    edtEndPoint.Text := '/auth';
-    edtUserID.Text := '1';
-    edtSixID.Text := '111111';
-    lblStandardPort.Caption := 'Padrão: 8080';
-    lblStandardEndPoint.Caption := 'Padrão: /auth';
-    lblStandardUserID.Caption := 'Padrão: 1';
-    lblStandardSixIDtxt.Caption := 'Padrão: 111111';
+    edtUser.Text := 'Fabio Ghizoni';
+    edtPassWord.Text := '40028922';
   end
   else
   begin
-    edtServer.Text := EmptyStr;
-    edtEndPoint.Text := EmptyStr;
-    edtUserID.Text := EmptyStr;
-    edtSixID.Text := EmptyStr;
-    lblStandardPort.Caption := 'Padrão: ';
-    lblStandardEndPoint.Caption := 'Padrão: ';
-    lblStandardUserID.Caption := 'Padrão: ';
-    lblStandardSixIDtxt.Caption := 'Padrão: ';
+    edtUser.Text := EmptyStr;
+    edtPassWord.Text := EmptyStr;
   end;
-
-end;
-
-procedure TfrmMain.FormDestroy(Sender: TObject);
-begin
-
-//  if THorse.IsRunning then
-//    THorse.StopListen;
 
 end;
 
