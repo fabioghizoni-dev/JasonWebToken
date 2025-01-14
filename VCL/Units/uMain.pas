@@ -172,18 +172,42 @@ var
   LCompactToken: String;
 begin
 
-  if (User = 'Fabio Ghizoni') and (PassWord = '40028922') then
+  if (Trim(User) = EmptyStr) and (Trim(PassWord) = EmptyStr) and (Trim(edtUser.
+  Text) = EmptyStr) and (Trim(edtPassWord.Text) = EmptyStr) then
+  begin
+    User := 'Fabio Ghizoni';
+    PassWord := '12345678';
+  end;
+
+  if (Trim(Issuer) = EmptyStr) and (Trim(PassWord) = EmptyStr) and (Trim(edtUser.
+  Text) = EmptyStr) and (Trim(edtPassWord.Text) = EmptyStr) then
+  begin
+    User := 'Fabio Ghizoni';
+    PassWord := '12345678';
+  end;
+
+  if (User = 'Fabio Ghizoni') and (PassWord = '12345678') then
   begin
     try
 
       if mmoJSON.Lines.Count > 0 then
         mmoJSON.Clear;
 
-      if (Trim(Issuer) = EmptyStr) and (Trim(Subject) = EmptyStr) then
+      if not (Trim(Issuer) = EmptyStr) and not (Trim(Subject) = EmptyStr) then
       begin
         LToken := TJWT.Create;
         LToken.Claims.Issuer := Issuer;
         LToken.Claims.Subject := Subject;
+        LToken.Claims.Expiration := Now + 1;
+
+        LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);
+        mmoJSON.Lines.Add(LCompactToken);
+      end
+      else
+      begin
+        LToken := TJWT.Create;
+        LToken.Claims.Issuer := 'SOS Soluções';
+        LToken.Claims.Subject := 'Fabio Ghizoni';
         LToken.Claims.Expiration := Now + 1;
 
         LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);

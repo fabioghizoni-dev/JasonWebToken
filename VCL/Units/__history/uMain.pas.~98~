@@ -114,20 +114,16 @@ begin
         Res.AddHeader('Hello', 'World');
         Res.Send(LBody.ToJSON);
 
-
-        LToken := MakeJWT(Server_User, Server_Pass);
-        Res.Send(LToken);
+        THorse.Get('/Private/AuthToken', procedure(Req: THorseRequest; Res: THorseResponse)
+        begin
+          Res.Send(MakeJWT(Server_User, Server_Pass, 'SOS Soluções', 'Fabio Ghizoni'));
+        end);
 
       except
         on E: Exception do
           ShowMessage(E.Message);
 
       end;
-    end);
-
-    THorse.Get('/Private/AuthToken', procedure(Req: THorseRequest; Res: THorseResponse)
-    begin
-      Res.Send('Hello');
     end);
 
     THorse.Listen(8080);
@@ -159,7 +155,7 @@ begin
   else
     Exit;
 
-  MakeJWT(User, PassWord);
+  //MakeJWT(User, PassWord);
 
 end;
 
@@ -194,9 +190,10 @@ begin
         mmoJSON.Lines.Add(LCompactToken);
       end;
 
+      Result := LCompactToken;
+
     finally
 
-      Result := LCompactToken;
       FreeAndNil(LToken);
 
     end;

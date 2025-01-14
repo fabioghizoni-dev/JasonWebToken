@@ -56,7 +56,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure btnConfirmClick(Sender: TObject);
   private
-    function MakeJWT(User, PassWord: string): string;
+    function MakeJWT(User, PassWord, Issuer, Subject: string): string;
     function ValidJWT(JWT: TJWT; Token, Key: String): Boolean;
     { Private declarations }
   public
@@ -85,6 +85,7 @@ var
   Server_Pass: String;
 begin
   try
+
     THorse.Use(Jhonson);
     lblPortStandard.Caption := '8080';
     lblEnPointStandard.Caption := '/Private';
@@ -95,38 +96,34 @@ begin
     Server_Pass := '12345678';
     ID := 40028922;
 
+    THorse.Use(HorseBasicAuthentication(function(const AUsername, APassword: String): Boolean
+    begin
+      Result := AUsername.Equals(Server_User) and APassword.Equals(Server_Pass);
+    end));
+
     THorse.Get('/Private/FirstAuth', procedure(Req: THorseRequest; Res: THorseResponse)
     begin
 
-      THorse.Use(HorseBasicAuthentication(function(const AUsername, APassword: String): Boolean
-      begin
-        Result := AUsername.Equals(Server_User) and APassword.Equals(Server_Pass);
-      end));
-
       try
 
-//        LBody := TJSONObject.Create;
-//        LBody.AddPair('User', Server_User);
-//        LBody.AddPair('ID', TJSONNumber.Create(ID));
-//
-//        Res.ContentType('application/json');
-//        Res.AddHeader('Hello', 'World');
-//        Res.Send(LBody.ToJSON);
-//
-//
-//        LToken := MakeJWT(Server_User, Server_Pass);
-//        Res.Send(LToken);
+        LBody := TJSONObject.Create;
+        LBody.AddPair('User', Server_User);
+        LBody.AddPair('ID', TJSONNumber.Create(ID));
+
+        Res.ContentType('application/json');
+        Res.AddHeader('Hello', 'World');
+        Res.Send(LBody.ToJSON);
+
+        THorse.Get('/Private/AuthToken', procedure(Req: THorseRequest; Res: THorseResponse)
+        begin
+          Res.Send(MakeJWT(Server_User, Server_Pass, 'SOS Soluções', 'Fabio Ghizoni'));
+        end);
 
       except
         on E: Exception do
           ShowMessage(E.Message);
 
       end;
-    end);
-
-    THorse.Get('/Private/AuthToken', procedure(Req: THorseRequest; Res: THorseResponse)
-    begin
-
     end);
 
     THorse.Listen(8080);
@@ -158,7 +155,7 @@ begin
   else
     Exit;
 
-  MakeJWT(User, PassWord);
+  //MakeJWT(User, PassWord);
 
 end;
 
@@ -169,30 +166,50 @@ begin
 
 end;
 
-function TfrmMain.MakeJWT(User, PassWord: string): string;
+function TfrmMain.MakeJWT(User, PassWord, Issuer, Subject: string): string;
 var
   LToken: TJWT;
   LCompactToken: String;
 begin
 
-  if (User = 'Fabio Ghizoni') and (PassWord = '40028922') then
+  if (Trim(User) = EmptyStr) and (Trim(PassWord) = EmptyStr) then
+  begin
+    User := 'Fabio Ghizoni';
+    PassWord := '12345678';
+  end;
+
+  if (User = 'Fabio Ghizoni') and (PassWord = '12345678') then
   begin
     try
 
       if mmoJSON.Lines.Count > 0 then
         mmoJSON.Clear;
 
-      LToken := TJWT.Create;
-      LToken.Claims.Issuer := 'SOS Soluções';
-      LToken.Claims.Subject := 'Fabio Ghizoni';
-      LToken.Claims.Expiration := Now + 1;
+      if not (Trim(Issuer) = EmptyStr) and not (Trim(Subject) = EmptyStr) then
+      begin
+        LToken := TJWT.Create;
+        LToken.Claims.Issuer := Issuer;
+        LToken.Claims.Subject := Subject;
+        LToken.Claims.Expiration := Now + 1;
 
-      LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);
-      mmoJSON.Lines.Add(LCompactToken);
+        LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);
+        mmoJSON.Lines.Add(LCompactToken);
+      end
+      else
+      begin
+        LToken := TJWT.Create;
+        LToken.Claims.Issuer := 'SOS Soluções';
+        LToken.Claims.Subject := 'Fabio Ghizoni';
+        LToken.Claims.Expiration := Now + 1;
+
+        LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);
+        mmoJSON.Lines.Add(LCompactToken);
+      end;
+
+      Result := LCompactToken;
 
     finally
 
-      Result := LCompactToken;
       FreeAndNil(LToken);
 
     end;
