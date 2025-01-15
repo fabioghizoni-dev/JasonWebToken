@@ -4,12 +4,14 @@ interface
 
 uses
   Horse,
+  Horse.JWT,
   Horse.Jhonson,
   Horse.BasicAuthentication,
   JOSE.Core.JWT,
-  JOSE.Core.JWA,
   JOSE.Core.JWK,
+  JOSE.Consumer,
   JOSE.Core.Builder,
+  JOSE.Hashing.HMAC,
   JOSE.Core.Parts,
   Winapi.Windows,
   Winapi.Messages,
@@ -26,13 +28,6 @@ uses
 type
   TfrmMain = class(TForm)
     pnlMain: TPanel;
-    pnlLeft: TPanel;
-    pnlEndPoint: TPanel;
-    pnlEdtPort: TPanel;
-    pnlLblPort: TPanel;
-    lblPort: TLabel;
-    lblEndPoint: TLabel;
-    pnlEdtEndPoint: TPanel;
     pnlCheckBox: TPanel;
     pnlLblStandard: TPanel;
     lblStandard: TLabel;
@@ -48,8 +43,6 @@ type
     edtPassWord: TEdit;
     pnlBtnConfirm: TPanel;
     btnConfirm: TButton;
-    lblPortStandard: TLabel;
-    lblEnPointStandard: TLabel;
     mmoJSON: TMemo;
     pnlMMO: TPanel;
     procedure checkClick(Sender: TObject);
@@ -57,7 +50,6 @@ type
     procedure btnConfirmClick(Sender: TObject);
   private
     function MakeJWT(User, PassWord, Issuer, Subject: string): string;
-    function ValidJWT(JWT: TJWT; Token, Key: String): Boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -68,7 +60,7 @@ var
 
 implementation
 
-uses System.JSON;
+uses System.JSON, System.DateUtils;
 
 {$R *.dfm}
 
@@ -79,7 +71,6 @@ uses System.JSON;
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
   ID: Integer;
-  LBody: TJSONObject;
   LToken,
   Server_User,
   Server_Pass: String;
@@ -87,8 +78,6 @@ begin
   try
 
     THorse.Use(Jhonson);
-    lblPortStandard.Caption := '8080';
-    lblEnPointStandard.Caption := '/Private';
 
     mmoJSON.Clear;
     checkClick(Sender);
@@ -96,95 +85,59 @@ begin
     Server_Pass := '12345678';
     ID := 40028922;
 
-    THorse.Use(HorseBasicAuthentication(function(const AUsername, APassword: String): Boolean
+    THorse.Use(HorseBasicAuthentication(
+    function(const AUsername, APassword: string): Boolean
     begin
       Result := AUsername.Equals(Server_User) and APassword.Equals(Server_Pass);
     end));
 
-    THorse.Get('/Private/FirstAuth', procedure(Req: THorseRequest; Res: THorseResponse)
+    // Rota para autenticação básica '/private/FirstAuth'
+    THorse.Post('private/FirstAuth',
+      procedure(Req: THorseRequest; Res: THorseResponse)
+      begin
+        try
+          Res.ContentType('application/json');
+          LToken := MakeJWT(Server_User, Server_Pass, 'SOS Soluções', '40028922');
+          Res.Send(LToken);
+        except
+          on E: Exception do
+            ShowMessage('Classe: ' + E.ClassName + sLineBreak + 'Erro: ' + E.Message);
+        end;
+      end
+    );
+
+    // Após a autenticação básica, agora vamos usar JWT para todas as outras rotas
+    THorse.Use(HorseJWT(LToken, THorseJWTConfig.New.SkipRoutes(['private/FirstAuth'])));
+
+    // Rota '/private/TokenAuth' agora usa JWT para autenticação
+    THorse.Post('private/TokenAuth',
+      procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
+      begin
+        Res.Send('Sucesso');
+      end
+    );
+
+    THorse.Listen(8080,
+    procedure
     begin
-
-      try
-
-        LBody := TJSONObject.Create;
-        LBody.AddPair('User', Server_User);
-        LBody.AddPair('ID', TJSONNumber.Create(ID));
-
-        Res.ContentType('application/json');
-        Res.AddHeader('Hello', 'World');
-        Res.Send(LBody.ToJSON);
-
-        THorse.Get('/Private/AuthToken', procedure(Req: THorseRequest; Res: THorseResponse)
-        begin
-          Res.Send(MakeJWT(Server_User, Server_Pass, 'SOS Soluções', 'Fabio Ghizoni'));
-        end);
-
-      except
-        on E: Exception do
-          ShowMessage(E.Message);
-
-      end;
+      if THorse.IsRunning = True then
+        Caption := Format('Servidor rodando em %d', [THorse.Port]);
     end);
 
-    THorse.Listen(8080);
-
   finally
-    FreeAndNil(LBody);
+
   end;
-end;
-
-procedure TfrmMain.btnConfirmClick(Sender: TObject);
-var
-  User,
-  PassWord:
-  String;
-
-begin
-
-  if not (Trim(edtUser.Text) = EmptyStr) then
-  begin
-    User := edtUser.Text;
-  end
-  else
-    Exit;
-
-  if not (Trim(edtPassWord.Text) = EmptyStr) then
-  begin
-    PassWord := edtPassWord.Text;
-  end
-  else
-    Exit;
-
-  //MakeJWT(User, PassWord);
-
-end;
-
-function TfrmMain.ValidJWT(JWT: TJWT; Token, Key: String): Boolean;
-begin
-
-  Result := False;
-
 end;
 
 function TfrmMain.MakeJWT(User, PassWord, Issuer, Subject: string): string;
 var
-  LToken: TJWT;
+  LTokenJWT: TJWT;
+  LKeyJWK: TJWK;
   LCompactToken: String;
 begin
 
-  if (Trim(User) = EmptyStr) and (Trim(PassWord) = EmptyStr) and (Trim(edtUser.
-  Text) = EmptyStr) and (Trim(edtPassWord.Text) = EmptyStr) then
-  begin
-    User := 'Fabio Ghizoni';
-    PassWord := '12345678';
-  end;
-
-  if (Trim(Issuer) = EmptyStr) and (Trim(PassWord) = EmptyStr) and (Trim(edtUser.
-  Text) = EmptyStr) and (Trim(edtPassWord.Text) = EmptyStr) then
-  begin
-    User := 'Fabio Ghizoni';
-    PassWord := '12345678';
-  end;
+  Result := EmptyStr;
+  LKeyJWK := TJWK.Create('key');
 
   if (User = 'Fabio Ghizoni') and (PassWord = '12345678') then
   begin
@@ -195,33 +148,56 @@ begin
 
       if not (Trim(Issuer) = EmptyStr) and not (Trim(Subject) = EmptyStr) then
       begin
-        LToken := TJWT.Create;
-        LToken.Claims.Issuer := Issuer;
-        LToken.Claims.Subject := Subject;
-        LToken.Claims.Expiration := Now + 1;
 
-        LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);
-        mmoJSON.Lines.Add(LCompactToken);
-      end
-      else
-      begin
-        LToken := TJWT.Create;
-        LToken.Claims.Issuer := 'SOS Soluções';
-        LToken.Claims.Subject := 'Fabio Ghizoni';
-        LToken.Claims.Expiration := Now + 1;
+        LTokenJWT := TJWT.Create;
 
-        LCompactToken := TJOSE.SHA256CompactToken('my_key', LToken);
+        LTokenJWT.Claims.Issuer := Issuer;
+        LTokenJWT.Claims.Subject := Subject;
+        LTokenJWT.Claims.Expiration := IncHour(Now + 1);
+
+        LCompactToken := TJOSE.SHA512CompactToken('key', LTokenJWT);
         mmoJSON.Lines.Add(LCompactToken);
+
+        LTokenJWT.Verified := False;
+        TJOSE.Verify(LKeyJWK, LCompactToken, LTokenJWT.ClaimClass);
+
+        if Assigned(LTokenJWT) then
+        begin
+
+          if LTokenJWT.Verified = True then
+          begin
+            Result := 'Token verificado com sucesso!';
+          end
+          else
+          begin
+            Result := 'Token errado, tente novamente ou mude o Token!';
+          end;
+
+        end;
+
       end;
-
-      Result := LCompactToken;
 
     finally
 
-      FreeAndNil(LToken);
+      FreeAndNil(LTokenJWT);
 
     end;
   end;
+
+end;
+
+procedure TfrmMain.btnConfirmClick(Sender: TObject);
+var
+  User,
+  PassWord:
+  String;
+
+begin
+
+  User := 'Fabio Ghizoni';
+  PassWord := '12345678';
+
+  ShowMessage(MakeJWT(User, PassWord, 'SOS Soluções', '40028922'));
 
 end;
 
@@ -231,7 +207,7 @@ begin
   if check.Checked = True then
   begin
     edtUser.Text := 'Fabio Ghizoni';
-    edtPassWord.Text := '40028922';
+    edtPassWord.Text := '12345678';
   end
   else
   begin

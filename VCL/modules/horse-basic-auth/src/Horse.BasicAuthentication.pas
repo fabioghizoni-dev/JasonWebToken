@@ -103,7 +103,7 @@ begin
 
   if LBasicAuthenticationEncode.Trim.IsEmpty and not Req.Query.TryGetValue(Config.Header, LBasicAuthenticationEncode) then
   begin
-    Res.Send('Autorização não encontrada').Status(THTTPStatus.Unauthorized).RawWebResponse
+    Res.Send('Authorization not found').Status(THTTPStatus.Unauthorized).RawWebResponse
 {$IF DEFINED(FPC)}
       .WWWAuthenticate := Format('Basic realm=%s', [Config.RealmMessage]);
 {$ELSE}
@@ -114,7 +114,7 @@ begin
 
   if not LBasicAuthenticationEncode.Trim.ToLower.StartsWith(BASIC_AUTH) then
   begin
-    Res.Send('Tipo de autorização inválida').Status(THTTPStatus.Unauthorized);
+    Res.Send('Invalid authorization type').Status(THTTPStatus.Unauthorized);
     raise EHorseCallbackInterrupted.Create;
   end;
 
@@ -140,7 +140,7 @@ begin
 
   if not LIsAuthenticated then
   begin
-    Res.Send('Não autorizado').Status(THTTPStatus.Unauthorized);
+    Res.Send('Unauthorized').Status(THTTPStatus.Unauthorized);
     raise EHorseCallbackInterrupted.Create;
   end;
 

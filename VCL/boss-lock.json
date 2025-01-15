@@ -2,6 +2,14 @@
 	"hash": "d41d8cd98f00b204e9800998ecf8427e",
 	"updated": "2025-01-09T17:14:01.3098306-03:00",
 	"installedModules": {
+		"github.com/andre-djsystem/hashlib4pascal": {
+			"name": "hashlib4pascal",
+			"version": "1.0.0",
+			"hash": "8528036224699ab509c7d8f31d691ffb",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
 		"github.com/hashload/horse": {
 			"name": "horse",
 			"version": "3.1.6",
@@ -13,7 +21,15 @@
 		"github.com/hashload/horse-basic-auth": {
 			"name": "horse-basic-auth",
 			"version": "1.2.3",
-			"hash": "525c71503c467b1db394d33d04bbc966",
+			"hash": "6f594552dc79151f3a264dbf9c96f314",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"github.com/hashload/horse-jwt": {
+			"name": "horse-jwt",
+			"version": "2.0.15",
+			"hash": "a795b0b992acd15a28a64a5c2dc753ca",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -29,7 +45,7 @@
 		"github.com/paolo-rossi/delphi-jose-jwt": {
 			"name": "delphi-jose-jwt",
 			"version": "v3.3.1",
-			"hash": "30168430005de681e90bef999de6804a",
+			"hash": "fcaed49e7acbbd415155edefd31cb2b6",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
