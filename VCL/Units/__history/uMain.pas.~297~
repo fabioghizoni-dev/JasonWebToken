@@ -92,10 +92,10 @@ begin
 
   try
 
-//    THorse
-//      .Use(Jhonson);
+    THorse
+      .Use(Jhonson);
 
-    FirstAuth(40028922, 'Fabio Ghizoni', '12345678');
+    FirstAuth(40028922, 'Fabio Ghizoni', '12345678')
 
 //    mmoJSON.Clear;
 //    checkClick(Sender);

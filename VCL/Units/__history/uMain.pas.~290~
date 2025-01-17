@@ -47,7 +47,7 @@ type
     procedure btnConfirmClick(Sender: TObject);
   private
     procedure JWTAuth(LToken: String);
-    procedure FirstAuth(ID: Integer; Server_User, Server_Pass: String);
+    procedure FirstAuth(ID: Integer; LToken, Server_User, Server_Pass: String);
     function CallBackValidation(const AUsername, APassword: string): Boolean;
     function MakeJWT(User, PassWord, Issuer, Subject: String): String;
     function ValidJWT(LCompactToken: String): Boolean;
@@ -75,48 +75,34 @@ procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   try
 
-    THorse.Listen(8080,
-    procedure
-    begin
-      if THorse.IsRunning = True then
-        Caption := Format('Servidor rodando em %d', [THorse.Port]) + '...';
-    end);
-
-  except
-
-    on E:Exception do
-      if THorse.IsRunning = False then
-        Caption := ('Erro no Servidor...');
-
-  end;
-
-  try
-
-//    THorse
-//      .Use(Jhonson);
-
-    FirstAuth(40028922, 'Fabio Ghizoni', '12345678');
-
 //    mmoJSON.Clear;
 //    checkClick(Sender);
 //    Server_User := 'Fabio Ghizoni';
 //    Server_Pass := '12345678';
 //    ID := 40028922;
 
+    THorse
+      .Use(Jhonson);
+
   finally
 
-  end;
+    THorse.Listen(8080,
+    procedure
+    begin
+      if THorse.IsRunning = True then
+      Caption := Format('Servidor rodando em %d', [THorse.Port]);
+    end);
 
+  end;
 end;
 
-procedure TfrmMain.FirstAuth(ID: Integer; Server_User, Server_Pass: String);
-var
-  LToken: String;
+procedure TfrmMain.FirstAuth(ID: Integer; LToken, Server_User, Server_Pass: String);
 begin
   try
     try
 
       THorse
+
       {--| Configurações básicas do Middleware BasicAuthentication |--}
         .Use(HorseBasicAuthentication(CallBackValidation,
       THorseBasicAuthenticationConfig.New.Header('HeaderBASIC')))
@@ -149,13 +135,6 @@ begin
 
     end;
   finally
-
-    THorse
-    .Use(HorseBasicAuthentication(CallBackValidation,
-      THorseBasicAuthenticationConfig.New.Header('HeaderBASIC')))
-    .Use(HorseBasicAuthentication(CallBackValidation,
-    THorseBasicAuthenticationConfig.New.SkipRoutes
-      (['/private/TokenAuth']))).Free;
 
   end;
 end;

@@ -47,7 +47,7 @@ type
     procedure btnConfirmClick(Sender: TObject);
   private
     procedure JWTAuth(LToken: String);
-    procedure FirstAuth(ID: Integer; Server_User, Server_Pass: String);
+    procedure FirstAuth(ID: Integer; LToken, Server_User, Server_Pass: String);
     function CallBackValidation(const AUsername, APassword: string): Boolean;
     function MakeJWT(User, PassWord, Issuer, Subject: String): String;
     function ValidJWT(LCompactToken: String): Boolean;
@@ -79,7 +79,7 @@ begin
     procedure
     begin
       if THorse.IsRunning = True then
-        Caption := Format('Servidor rodando em %d', [THorse.Port]) + '...';
+      Caption := Format('Servidor rodando em %d', [THorse.Port]);
     end);
 
   except
@@ -92,10 +92,8 @@ begin
 
   try
 
-//    THorse
-//      .Use(Jhonson);
-
-    FirstAuth(40028922, 'Fabio Ghizoni', '12345678');
+    THorse
+      .Use(Jhonson);
 
 //    mmoJSON.Clear;
 //    checkClick(Sender);
@@ -109,9 +107,7 @@ begin
 
 end;
 
-procedure TfrmMain.FirstAuth(ID: Integer; Server_User, Server_Pass: String);
-var
-  LToken: String;
+procedure TfrmMain.FirstAuth(ID: Integer; LToken, Server_User, Server_Pass: String);
 begin
   try
     try
@@ -149,13 +145,6 @@ begin
 
     end;
   finally
-
-    THorse
-    .Use(HorseBasicAuthentication(CallBackValidation,
-      THorseBasicAuthenticationConfig.New.Header('HeaderBASIC')))
-    .Use(HorseBasicAuthentication(CallBackValidation,
-    THorseBasicAuthenticationConfig.New.SkipRoutes
-      (['/private/TokenAuth']))).Free;
 
   end;
 end;
